@@ -1,26 +1,190 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------------------
+   OIDE ACLS Simulator — medical monitor design tokens (Tailwind v4)
+   Dark-first. Every token below is available as a utility, e.g.
+   bg-monitor-void, text-trace-ecg, border-glass-edge, shadow-glow-ecg
+--------------------------------------------------------------------------- */
+
+@theme {
+  /* --- Surfaces: deep black monitor chassis --- */
+  --color-monitor-void: #0a0d12; /* page background */
+  --color-monitor-900: #0d1117; /* panel base */
+  --color-monitor-800: #121822; /* raised panel */
+  --color-monitor-700: #1a2130; /* control surface */
+  --color-monitor-600: #232c3d; /* hairline / divider */
+  --color-monitor-500: #3a465c; /* disabled stroke */
+
+  /* --- Glassmorphism --- */
+  --color-glass-fill: oklch(from #121822 l c h / 0.55);
+  --color-glass-edge: oklch(from #00e5ff l c h / 0.18);
+  --color-glass-sheen: oklch(from #ffffff l c h / 0.06);
+
+  /* --- Waveform traces --- */
+  --color-trace-ecg: #00ffaa; /* lead II / neon cyan-green */
+  --color-trace-spo2: #00e5ff; /* pleth / electrical blue */
+  --color-trace-resp: #ffd60a; /* capnography / respiration */
+  --color-trace-abp: #ff2d78; /* arterial pressure */
+  --color-trace-grid: oklch(from #00e5ff l c h / 0.1);
+
+  /* --- Semantic / vitals --- */
+  --color-signal-blue: #00e5ff;
+  --color-signal-cyan: #00ffaa;
+  --color-vital-ok: #00ffaa;
+  --color-vital-watch: #ffd60a;
+
+  /* --- Alerts: emergency escalation ladder --- */
+  --color-alert-advisory: #ffb020; /* amber — informational */
+  --color-alert-urgent: #ff7a1a; /* orange — act soon */
+  --color-alert-critical: #ff3b30; /* red — act now */
+  --color-alert-arrest: #ff0040; /* saturated red — VF/VT/asystole */
+
+  /* --- Text --- */
+  --color-readout: #e6f7ff; /* primary numeric readout */
+  --color-readout-dim: #7c8da6; /* labels, units */
+  --color-readout-faint: #4b5a70; /* inactive */
+
+  /* --- Type --- */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  /* --- Glow shadows (monitor phosphor bloom) --- */
+  --shadow-glow-ecg: 0 0 12px oklch(from #00ffaa l c h / 0.55),
+    0 0 32px oklch(from #00ffaa l c h / 0.25);
+  --shadow-glow-blue: 0 0 12px oklch(from #00e5ff l c h / 0.55),
+    0 0 32px oklch(from #00e5ff l c h / 0.25);
+  --shadow-glow-alert: 0 0 14px oklch(from #ff3b30 l c h / 0.6),
+    0 0 40px oklch(from #ff3b30 l c h / 0.3);
+  --shadow-glass: 0 8px 32px oklch(from #000000 l c h / 0.6),
+    inset 0 1px 0 oklch(from #ffffff l c h / 0.07);
+
+  /* --- Motion --- */
+  --animate-alarm-pulse: alarm-pulse 1s ease-in-out infinite;
+  --animate-sweep: sweep 4s linear infinite;
+  --animate-flatline: flatline 2s ease-in-out infinite;
+  /* Defibrillator capacitor states. */
+  --animate-charge-pulse: charge-pulse 0.9s ease-in-out infinite;
+  --animate-armed-flash: armed-flash 0.7s steps(1, end) infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes alarm-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Capacitor fill. Duration is set inline from the computed charge time. */
+@keyframes capacitor-charge {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Amber glow breathing behind the charge bar. */
+@keyframes charge-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px oklch(from #ffb020 l c h / 0.45);
+  }
+  50% {
+    box-shadow: 0 0 22px oklch(from #ffb020 l c h / 0.85);
+  }
+}
+
+/* Hard on/off flash — a charged defibrillator does not fade politely. */
+@keyframes armed-flash {
+  0%,
+  49% {
+    background-color: oklch(from #ff0040 l c h / 0.9);
+  }
+  50%,
+  100% {
+    background-color: oklch(from #ff0040 l c h / 0.45);
+  }
+}
+
+@keyframes flatline {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Force dark scheme — this is a monitor, it is never light. */
+:root {
+  color-scheme: dark;
+  --background: var(--color-monitor-void);
+  --foreground: var(--color-readout);
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--color-monitor-void);
+    color: var(--color-readout);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Numeric vitals should never reflow while counting. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono);
+  }
+}
+
+@layer components {
+  /* Frosted control panel used across the simulator chrome. */
+  .glass-panel {
+    background-color: var(--color-glass-fill);
+    border: 1px solid var(--color-glass-edge);
+    box-shadow: var(--shadow-glass);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+
+  /* Faint graticule behind waveform canvases. */
+  .monitor-grid {
+    background-image: linear-gradient(
+        to right,
+        var(--color-trace-grid) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, var(--color-trace-grid) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+/* Respect reduced-motion for alarm flashing (photosensitivity). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
